@@ -1,11 +1,11 @@
 {
-    "name": "ueberdosis/hocuspocus-laravel",
+    "name": "michaelsieminski/hocuspocus-laravel",
     "description": "Integrates Hocuspocus into Laravel with a few clicks",
     "keywords": [
         "laravel",
         "hocuspocus"
     ],
-    "homepage": "https://github.com/ueberdosis/hocuspocus-laravel",
+    "homepage": "https://github.com/michaelsieminski/hocuspocus-laravel",
     "license": "MIT",
     "authors": [
         {
@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": "^7.4|^8.0",
-        "illuminate/contracts": "^8.0|^9.0",
+        "illuminate/contracts": "^8.0|^9.0|^10.0|^11.0|^12.0",
         "spatie/laravel-package-tools": "^1.4.3"
     },
     "autoload": {
