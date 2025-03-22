@@ -15,6 +15,7 @@ use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Hocuspocus\Contracts\Collaborative;
+use Hocuspocus\Jobs\Store;
 use Hocuspocus\Jobs\Change;
 use Hocuspocus\Jobs\Connect;
 use Hocuspocus\Jobs\Disconnect;
@@ -64,6 +65,39 @@ class HocuspocusLaravel
         if (method_exists($this, $handler)) {
             return $this->$handler($json['payload'], $document, $user);
         }
+    }
+
+    /**
+     * Store Y.js compatibel Uint8Array data to the database.
+     * @param Request $request
+     * @throws ReflectionException|AuthorizationException|AuthenticationException
+     */
+    public function storeData(Request $request)
+    {
+        if (!$this->verifySignature($request)) {
+            throw new BadRequestException('Invalid signature');
+        }
+
+        $json = json_decode($request->getContent() ?: '{}', true);
+
+        if (
+            !isset($json['payload']['state'])
+            || !isset($json['payload']['requestParameters'])
+            || !isset($json['payload']['documentName'])
+        ) {
+            throw new BadRequestException('Invalid payload');
+        }
+
+        $user = $this->getUser($json['payload']['requestParameters']);
+        $document = $this->getDocument($json['payload']['documentName']);
+        $binaryData = $json['payload']['state']['data'];
+        $binaryDataString = pack('C*', ...$binaryData);
+
+        if (!$user->can(config('hocuspocus-laravel.policy_method_name'), $document)) {
+            throw new AuthorizationException("User is not allowed to access this document");
+        }
+
+        dispatch(new Store($user, $document, $binaryDataString));
     }
 
     /**
