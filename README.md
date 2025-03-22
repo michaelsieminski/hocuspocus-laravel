@@ -97,12 +97,17 @@ Configure a random secret key in your `.env`:
 HOCUSPOCUS_SECRET="459824aaffa928e05f5b1caec411ae5f"
 ```
 
-Finally set up Hocuspocus with the webhook extension:
+Finally set up Hocuspocus with the webhook & database extensions:
 
 ```js
 import { Server } from '@hocuspocus/server'
 import { Webhook, Events } from '@hocuspocus/extension-webhook'
 import { TiptapTransformer } from '@hocuspocus/transformer'
+
+const createSignature = (body: string): string => {
+    const hmac = createHmac('sha256', '459824aaffa928e05f5b1caec411ae5f'); // secret from .env
+    return `sha256=${hmac.update(body).digest('hex')}`;
+};
 
 const server = Server.configure({
   extensions: [
@@ -114,6 +119,52 @@ const server = Server.configure({
 
       transformer: TiptapTransformer,
     }),
+    new Database({
+        fetch: async ({ documentName, requestParameters }) => {
+            try {
+                const contentToSign = JSON.stringify({
+                    documentName: documentName,
+                    queryParams: requestParameters,
+                });
+
+                const response = await axios.get(`https://example.com/api/documents/get/${encodeURIComponent(documentName)}`, {
+                    params: requestParameters,
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Hocuspocus-Signature-256': createSignature(contentToSign),
+                    },
+                });
+
+                if (response.data && response.data.data) {
+                    return new Uint8Array(response.data.data);
+                }
+
+                return null;
+            } catch (error) {
+                console.error(error)
+                return null;
+            }
+        },
+        store: async ({ document, documentName, requestHeaders, requestParameters, context, state }) => {
+            const json = JSON.stringify({
+                payload: {
+                    document: TiptapTransformer.fromYdoc(document),
+                    documentName,
+                    context,
+                    requestHeaders,
+                    requestParameters: Object.fromEntries(requestParameters.entries()),
+                    state,
+                },
+            });
+
+            return axios.post('https://example.com/api/documents/store', json, {
+                headers: {
+                    'X-Hocuspocus-Signature-256': createSignature(json),
+                    'Content-Type': 'application/json',
+                },
+            });
+        },
+      }),
   ],
 })
 
