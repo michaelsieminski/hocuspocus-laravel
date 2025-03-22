@@ -46,6 +46,11 @@ class Collaborator extends Model
         ]);
     }
 
+    /**
+     * Update the data of the given collaborative document
+     * @param Collaborative $document
+     * @param string $data
+     */
     public function updateDocumentData(Collaborative $document, string $data): void
     {
         $pivot = $this->documents()->byModel($document)->first();

@@ -20,6 +20,7 @@ use Hocuspocus\Jobs\Change;
 use Hocuspocus\Jobs\Connect;
 use Hocuspocus\Jobs\Disconnect;
 use Hocuspocus\Models\Collaborator;
+use Illuminate\Support\Facades\Log;
 
 class HocuspocusLaravel
 {
@@ -98,6 +99,34 @@ class HocuspocusLaravel
         }
 
         dispatch(new Store($user, $document, $binaryDataString));
+    }
+
+    /**
+     * Get Y.js compatibel Uint8Array data from the database.
+     * @param Request $request
+     * @param string $documentName
+     * @return JsonResponse
+     * @throws ReflectionException|AuthorizationException|AuthenticationException
+     */
+    public function getData(Request $request, string $documentName): JsonResponse
+    {
+        if (!$this->verifySignature($request)) {
+            throw new BadRequestException('Invalid signature');
+        }
+
+        $requestParameters = $request->query();
+        $user = $this->getUser($requestParameters);
+        $document = $this->getDocument($documentName);
+
+        if (!$user->can(config('hocuspocus-laravel.policy_method_name'), $document)) {
+            throw new AuthorizationException("User is not allowed to access this document");
+        }
+
+        $data = $user->collaborator->documents()->byModel($document)->first()->data;
+
+        return response()->json([
+            'data' => array_values(unpack('C*', $data)),
+        ]);
     }
 
     /**
@@ -223,7 +252,19 @@ class HocuspocusLaravel
             throw new BadRequestException('Invalid signature format');
         }
 
-        $digest = hash_hmac('sha256', $request->getContent(), config('hocuspocus-laravel.secret'));
+        // Different content to sign based on request method
+        if ($request->isMethod('GET')) {
+            $documentName = $request->route('documentName');
+            $queryParams = $request->query();
+            $queryParamsForJson = !empty($queryParams) ? $queryParams : new \stdClass();
+            $contentToSign = json_encode([
+                'documentName' => $documentName,
+                'queryParams' => $queryParamsForJson
+            ]);
+            $digest = hash_hmac('sha256', $contentToSign, config('hocuspocus-laravel.secret'));
+        } else {
+            $digest = hash_hmac('sha256', $request->getContent(), config('hocuspocus-laravel.secret'));
+        }
 
         return hash_equals($digest, $parts[1]);
     }
