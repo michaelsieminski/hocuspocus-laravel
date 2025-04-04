@@ -111,14 +111,6 @@ const createSignature = (body: string): string => {
 
 const server = Server.configure({
   extensions: [
-    new Webhook({
-      // url to your application
-      url: 'https://example.com/api/documents',
-      // the same secret you configured earlier in your .env
-      secret: '459824aaffa928e05f5b1caec411ae5f',
-
-      transformer: TiptapTransformer,
-    }),
     new Database({
         fetch: async ({ documentName, requestParameters }) => {
             try {
@@ -136,13 +128,29 @@ const server = Server.configure({
                 });
 
                 if (response.data && response.data.data) {
-                    return new Uint8Array(response.data.data);
+                    if (response.data.data.length > 0) {
+                        return new Uint8Array(response.data.data);
+                    }
                 }
 
-                return null;
+                const ydoc = TiptapTransformer.toYdoc(
+                    {
+                        type: 'doc',
+                        content: [{ type: 'paragraph' }],
+                    },
+                    'description',
+                );
+                return Y.encodeStateAsUpdate(ydoc);
             } catch (error) {
                 console.error(error)
-                return null;
+                const ydoc = TiptapTransformer.toYdoc(
+                    {
+                        type: 'doc',
+                        content: [{ type: 'paragraph' }],
+                    },
+                    'description',
+                );
+                return Y.encodeStateAsUpdate(ydoc);
             }
         },
         store: async ({ document, documentName, requestHeaders, requestParameters, context, state }) => {
@@ -165,6 +173,14 @@ const server = Server.configure({
             });
         },
       }),
+    new Webhook({
+      // url to your application
+      url: 'https://example.com/api/documents',
+      // the same secret you configured earlier in your .env
+      secret: '459824aaffa928e05f5b1caec411ae5f',
+
+      transformer: TiptapTransformer,
+    }),
   ],
 })
 
