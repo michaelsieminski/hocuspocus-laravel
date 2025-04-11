@@ -75,7 +75,7 @@ class Collaborator extends Model
      * @param Collaborative $document
      * @return Document
      */
-    protected function getOrCreateDocument(Collaborative $document): Document
+    public function getOrCreateDocument(Collaborative $document): Document
     {
         $pivot = $this->documents()->byModel($document)->first();
 
