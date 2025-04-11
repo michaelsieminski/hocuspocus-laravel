@@ -80,11 +80,17 @@ class Collaborator extends Model
         $pivot = $this->documents()->byModel($document)->first();
 
         if (!$pivot) {
+            $existingDoc = Document::where('model_type', get_class($document))
+                ->where('model_id', $document->id)
+                ->whereNotNull('data')
+                ->first();
+
             $pivot = $this->documents()->create([
                 'model_type' => get_class($document),
                 'model_id' => $document->id,
                 'connected' => true,
                 'connected_at' => now(),
+                'data' => $existingDoc ? $existingDoc->data : null,
             ]);
         }
 
