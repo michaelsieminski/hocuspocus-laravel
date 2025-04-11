@@ -122,10 +122,10 @@ class HocuspocusLaravel
             throw new AuthorizationException("User is not allowed to access this document");
         }
 
-        $data = $user->collaborator->documents()->byModel($document)->first()->data;
+        $userDocument = $user->collaborator->getOrCreateDocument($document);
 
         return response()->json([
-            'data' => array_values(unpack('C*', $data)),
+            'data' => array_values(unpack('C*', $userDocument->data ?? '')),
         ]);
     }
 
