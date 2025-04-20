@@ -123,9 +123,24 @@ class HocuspocusLaravel
         }
 
         $userDocument = $user->collaborator->getOrCreateDocument($document);
+        $binaryData = $userDocument->data;
+        $dataString = '';
+
+        if (is_resource($binaryData)) {
+            rewind($binaryData);
+            $dataString = stream_get_contents($binaryData);
+            if ($dataString === false) {
+                Log::error("Failed to read stream for document data.", ['document' => $documentName]);
+                $dataString = '';
+            }
+        } elseif (is_string($binaryData)) {
+            $dataString = $binaryData;
+        }
+
+        $unpackedData = $dataString === '' ? [] : array_values(unpack('C*', $dataString));
 
         return response()->json([
-            'data' => array_values(unpack('C*', $userDocument->data ?? '')),
+            'data' => $unpackedData,
         ]);
     }
 
