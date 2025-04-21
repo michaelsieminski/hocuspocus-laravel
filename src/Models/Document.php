@@ -14,6 +14,10 @@ class Document extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'data' => 'binary',
+    ];
+
     public function model(): MorphTo
     {
         return $this->morphTo();
