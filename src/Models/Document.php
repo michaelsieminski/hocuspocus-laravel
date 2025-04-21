@@ -14,9 +14,17 @@ class Document extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'data' => 'binary',
-    ];
+    public function setAttribute($key, $value)
+    {
+        if ($key === 'data' && is_string($value)) {
+            $stream = fopen('php://memory', 'r+');
+            fwrite($stream, $value);
+            rewind($stream);
+            parent::setAttribute($key, $stream);
+            return $this;
+        }
+        return parent::setAttribute($key, $value);
+    }
 
     public function model(): MorphTo
     {
