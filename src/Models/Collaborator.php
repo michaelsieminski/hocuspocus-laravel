@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Hocuspocus\Contracts\Collaborative;
 use PDO;
+use Illuminate\Support\Facades\DB;
 
 class Collaborator extends Model
 {

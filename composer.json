@@ -17,6 +17,11 @@
             "name": "Kris Siepert",
             "email": "m@kris.cool",
             "role": "Developer"
+        },
+        {
+            "name": "Michael Sieminski",
+            "email": "hello@sieminski.me",
+            "role": "Developer"
         }
     ],
     "require": {

@@ -1,11 +1,24 @@
-# Hocuspocus for Laravel
+# Hocuspocus for Laravel Fork
 Seamlessly integrates a [Hocuspocus](https://www.hocuspocus.dev) backend with Laravel.
+Please note that the [original repository](https://github.com/ueberdosis/hocuspocus-laravel) is not well maintained by the Tiptap Team, which is why I decided
+to work on my own version to use in my personal projects.
 
 ## Installation
 You can install the package via composer:
 
 ```bash
-composer require ueberdosis/hocuspocus-laravel
+composer require michaelsieminski/hocuspocus-laravel
+```
+
+Make sure to add the repository to your repositories in composer.json:
+
+```bash
+"repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/michaelsieminski/hocuspocus-laravel.git"
+        }
+    ]
 ```
 
 You can publish and run the migrations with:
@@ -83,11 +96,8 @@ import * as Y from 'yjs'
 
 const provider = new HocuspocusProvider({
   document: new Y.Doc(),
-  url: 'ws://localhost:1234',
+  url: 'ws://localhost:1234?access_token=' + window.collaborationAccessToken,
   name: window.collaborationDocumentName,
-  parameters: {
-    access_token: window.collaborationAccessToken,
-  },
 })
 ```
 
@@ -109,7 +119,7 @@ const createSignature = (body: string): string => {
     return `sha256=${hmac.update(body).digest('hex')}`;
 };
 
-const server = Server.configure({
+const server = new Server({
   extensions: [
     new Database({
         fetch: async ({ documentName, requestParameters }) => {
@@ -188,8 +198,7 @@ server.listen()
 ```
 
 ## Credits
-- [Kris Siepert](https://github.com/kriskbx)
-- [All Contributors](../../contributors)
+- [Ueberdosis](https://github.com/ueberdosis)
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
