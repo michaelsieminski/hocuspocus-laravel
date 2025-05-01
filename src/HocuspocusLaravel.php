@@ -69,7 +69,7 @@ class HocuspocusLaravel
     }
 
     /**
-     * Store Y.js compatibel Uint8Array data to the database.
+     * Store Y.js data to the database.
      * @param Request $request
      * @throws ReflectionException|AuthorizationException|AuthenticationException
      */
@@ -102,7 +102,7 @@ class HocuspocusLaravel
     }
 
     /**
-     * Get Y.js compatibel Uint8Array data from the database.
+     * Get Y.js data from the database.
      * @param Request $request
      * @param string $documentName
      * @return JsonResponse

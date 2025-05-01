@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Hocuspocus\Contracts\Collaborative;
+use PDO;
 
 class Collaborator extends Model
 {
@@ -53,10 +54,16 @@ class Collaborator extends Model
      */
     public function updateDocumentData(Collaborative $document, string $data): void
     {
-        $pivot = $this->documents()->byModel($document)->first();
-        $pivot->update([
-            'data' => $data,
-        ]);
+        $pdo = DB::connection()->getPdo();
+
+        $stmt = $pdo->prepare('UPDATE documents SET data = ? WHERE collaborator_id = ? AND model_type = ? AND model_id = ?');
+
+        $stmt->bindValue(1, $data, PDO::PARAM_LOB);
+        $stmt->bindValue(2, $this->id);
+        $stmt->bindValue(3, get_class($document));
+        $stmt->bindValue(4, $document->id);
+
+        $stmt->execute();
     }
 
     /**
